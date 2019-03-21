@@ -4,7 +4,9 @@ import os.path
 import subprocess
 from sys import platform
 
-debug = False
+debug = True
+util_list = ["file","nm"]
+os_type = "dont_know"
 
 class fileAttributes:
 	def __init__(self,file_name=""):
@@ -123,11 +125,39 @@ def parse_arguments(sysArgv):
 					contents = my_file.read()				
 					if debug:
 						print(f"Content of file {text_file} read as:\n {contents}")
-					input_file_list = contents.strip().split(" ")
+					input_file_list = contents.strip().split("\n")
 				break
 		elif argument=="xxxx":
 			continue
 		else:
 			input_file_list = sysArgv[1:]
-
 	return input_file_list
+
+def print_dict(input_dict):
+	for this_key in input_dict.keys():
+		print(f"For file:\'{this_key}\':")
+		for each_item in input_dict[this_key].attributes:
+			print(f"..{each_item}")
+
+
+def generate_attribute_dict(input_file_list):
+	my_attribute_dict = dict()
+	for files in input_file_list:
+		if files=="":
+			print(f"W: File name is empty")
+			continue
+		elif not os.path.isfile(files):
+			print(f"W: File {files} not found")
+			continue
+
+# create an object of file attributes type and put in the dictionary
+		my_attribute_dict[files] = fileAttributes(files)
+		for util in util_list:
+			if debug:
+				print(f"Running utility \'{util}\' on file \'{files}\'..")
+			attrib_now = run_file(util,files)
+			if debug:
+				print(f"The attributes determined are: {attrib_now}")
+			for each_attribute in attrib_now:
+				my_attribute_dict[files].add_attributes(each_attribute.strip('\\n\''))
+	return my_attribute_dict
