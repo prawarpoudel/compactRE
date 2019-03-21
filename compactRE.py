@@ -5,7 +5,6 @@ import subprocess
 import depends
 from sys import platform
 
-debug = depends.debug
 
 if __name__=="__main__":
 	os_type=depends.check_platform()
@@ -17,10 +16,10 @@ if __name__=="__main__":
 
 	input_file_list = depends.parse_arguments(sys.argv)
 
-	if debug:
+	if depends.debug:
 		print(f"..The file to reverse engineer are: {input_file_list}")
-	my_attribute_dict = depends.generate_attribute_dict(input_file_list)
+	my_attribute_dict = depends.generate_attribute_dict(input_file_list,depends.util_list)
 
-	if debug:
+	if depends.debug:
 		print(f"Done generating attributes!!\n\t..Check following..")
 	depends.print_dict(my_attribute_dict)
