@@ -12,6 +12,6 @@ Anyone who wants to gain information about the object file or executable file, b
 Download the source file, and run with python3.6 or later. Run the main file **compactRE.py -h** which will print the help message.
 
 ## Developement
-This is not a disasssembly tool, neither do I intend to implement any tool from my side. I try to incorporate any utility that is available in Linux or Windows or MAC in this suite and try to sort any useful information that can be gained from using those tools. Developement is going on...
+This is not a disasssembly tool, neither do I intend to implement any tool from my side. I try to incorporate any utility that is available in Linux or Windows or MAC in this suite and try to sort any useful information that can be gained from using those tools. Please use Cygwin inside windows. This is because windows does not support **fork** command. Developement is going on...
 
 Please write to me if you want to help or shoot any suggestion..

@@ -16,7 +16,7 @@ class fileAttributes:
 		self.file_name = file_name
 
 	def set_file_name(self,file_name):
-		print(f"Changing file_name from {self.file_name} to",end=" ")
+		print(f"..Changing file_name from {self.file_name} to",end=" ")
 		self.file_name = file_name
 		print(f" {self.file_name}")
 
@@ -67,12 +67,12 @@ def run_file(command,subject_file):
 		# wait for the child process to complete
 		os.wait()	
 		if debug:
-			print(f"Child process terminated..")
+			print(f"..Child process terminated..")
 		# read from the reading end of pipe
 		my_reads = os.read(r,1000).decode('UTF-8').strip("\n")
 		my_reads = my_reads.split(" ")
 		if debug:
-			print(f"Read from child process: {my_reads}")
+			print(f"..Read from child process: {my_reads}")
 	else:
 		os.close(r)
 		os.dup2(w,1)
@@ -91,47 +91,41 @@ def print_help_message():
 
 def parse_arguments(sysArgv):
 	input_file_list = list()
-	for idx,argument in enumerate(sysArgv[1:]):
-		if debug:
-			print(f"Operating on Command Argument {argument}")
-		if argument[0]=="-" or argument[0]=="--":
+
+	if debug:
+		print(f"Parsing command line argument")
+	# join all the elements in arguments separated by <space>
+	sys_arg = " ".join(sysArgv[1:])
+	# now break them by - sign
+	sys_arg_broken = sys_arg.split("-")
+
+	# things should be in place now
+	for each_arg in sys_arg_broken:
+		each_arg_broken = each_arg.split(" ")
+		if each_arg_broken[0] == 'h' or each_arg_broken[0] == 'H':
 			if debug:
-				print(f"Detected - ")
-			# flag mode, add others
-			if argument[1:]=='h' or argument[1:]=='H' or argument[1:]=="help" or argument[1:]=="Help" or argument[1:]=="HELP":
-				if debug:
-					print(f"Detected {argument[1:]}")
-				print_help_message()
+				print(f"..Detected help command: {each_arg_broken[0]}")
+			print_help_message()
+			sys.exit(0)
+		elif each_arg_broken[0] == 't' or each_arg_broken[0] ==  'T':
+			if debug:
+				print(f"..Detected text file command: {each_arg_broken[0]}")
+			if len(each_arg_broken)<2:
+				print(f"..No file provided with \'{each_arg_broken[0]}\' argument")
 				sys.exit(0)
-			elif argument[1:]=='T' or argument[1:]=='t' or argument[1:]=="TEXT" or argument[1:]=="Text" or argument[1:]=="text":
-				text_file = ""
+			if not os.path.isfile(each_arg_broken[1]):
+				print(f"..File \'{each_arg_broken[1]}\' not found")
+				sys.exit(0)
+			with open(each_arg_broken[1]) as my_file:
+				contents = my_file.read()
 				if debug:
-					print(f"Detected {argument[1:]}")
-
-				if not (len(sysArgv)>= idx+2):
-					print("..Provided flag -t: No argument found for file name to read. Please use -h for help.")
-					sys.exit(0)
-				else:
-					text_file = sysArgv[idx+2]
-					if debug:
-						print(f"File name to read the list is {text_file}.")
-				if not os.path.isfile(text_file):
-					print(f"File {text_file} not found.")
-					sys.exit(0)
-				if debug:
-					print(f"File {text_file} found.")
-
-				with open(text_file) as my_file:
-					contents = my_file.read()				
-					if debug:
-						print(f"Content of file {text_file} read as:\n {contents}")
-					input_file_list = contents.strip().split("\n")
-				break
-		elif argument=="xxxx":
-			continue
+					print(f"....Content of file {each_arg_broken[1]} read as:\n{contents}")
+				input_file_list = contents.strip().split("\n")
+			break
 		else:
-			input_file_list = sysArgv[1:]
+			input_file_list.append(each_arg)
 	return input_file_list
+
 
 def print_dict(input_dict):
 	for this_key in input_dict.keys():
@@ -139,9 +133,22 @@ def print_dict(input_dict):
 		for each_item in input_dict[this_key].attributes:
 			print(f"..{each_item}")
 
+def is_tool(name):
+    """Check whether `name` is on PATH and marked as executable."""
+    # from whichcraft import which
+    from shutil import which
+    return which(name) is not None
 
 def generate_attribute_dict(input_file_list):
 	my_attribute_dict = dict()
+
+	util_list_temp = list()
+	for util in util_list:
+		if is_tool(util):
+			util_list_temp.append(util)
+		else:
+			if debug:
+				print(f"..utility {util} not installed in system..")
 	for files in input_file_list:
 		if files=="":
 			print(f"W: File name is empty")
@@ -152,7 +159,7 @@ def generate_attribute_dict(input_file_list):
 
 # create an object of file attributes type and put in the dictionary
 		my_attribute_dict[files] = fileAttributes(files)
-		for util in util_list:
+		for util in util_list_temp:
 			if debug:
 				print(f"Running utility \'{util}\' on file \'{files}\'..")
 			attrib_now = run_file(util,files)
