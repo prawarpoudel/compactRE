@@ -14,12 +14,15 @@ if __name__=="__main__":
 		print(f"..Use -h flag for help message")
 		sys.exit(0)
 
+# send the command line argument for analysis to the function in depends.py
 	input_file_list = depends.parse_arguments(sys.argv)
 
 	if depends.debug:
 		print(f"..The file to reverse engineer are: {input_file_list}")
+	# generate the attribute dictionary
 	my_attribute_dict = depends.generate_attribute_dict(input_file_list,depends.util_list)
 
 	if depends.debug:
 		print(f"Done generating attributes!!\n\t..Check following..")
+# print all the attributes generated for each files
 	depends.print_dict(my_attribute_dict)

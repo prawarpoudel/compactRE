@@ -9,7 +9,7 @@ debug = False
 # we have three kinds of atributes, so a list of three sets
 # 0: info, 1: imported function, 2: dynamically loaded libs. add more if needed
 # change to be made in class fileAttributes also
-util_list = [["file"],["nm"],["ldd"]]
+util_list = [["file"],["nm"],["ldd","otool -d"]]
 
 os_type = "dont_know"
 
@@ -38,6 +38,9 @@ class fileAttributes:
 				print(f".... {each_attribute}")
 
 def check_platform():
+	'''
+	Checks the OS and returns string for its name.
+	'''
 	os_type = "dont_know"
 	if platform == "linux" or platform == "linux2":
 	    if debug:
@@ -59,6 +62,12 @@ def check_platform():
 
 # Following code runs the first of the tools that we want to integrate
 def run_file(command,subject_file):
+	'''
+	Args: [command][subject_file]
+			[command] is the command to run. It can have flags too.
+			[subject_file] is the name of workload
+	Returns: A list of string containing the output by running command on subject_file
+	'''
 	# let us create pipe() and write to the write end of pipe from child and read from parent
 	r,w = os.pipe()
 	my_reads = ""
@@ -76,10 +85,10 @@ def run_file(command,subject_file):
 		os.close(w)
 		# this is parent process
 		if debug:
-			print(f"Forked child process {my_pid} for \'file\' operation")	
+			print(f"Forked child process {my_pid} for \'file\' operation")
 			print("Parent waiting..")
 		# wait for the child process to complete
-		os.wait()	
+		os.wait()
 		if debug:
 			print(f"..Child process terminated..")
 		# read from the reading end of pipe
@@ -91,8 +100,8 @@ def run_file(command,subject_file):
 		os.close(r)
 		os.dup2(w,1)
 		os.dup2(dev_null_file_id,2)
-		my_arguments = [command]+subject_file.split(" ")
-		os.execvp(command,my_arguments)
+		my_arguments = command.split(' ')+subject_file.split(" ")
+		os.execvp(command.split(' ')[0],my_arguments)
 		print(f"Should not be here, but here I am..")
 	return my_reads
 
@@ -140,7 +149,6 @@ def parse_arguments(sysArgv):
 				if debug:
 					print(f"....Content of file {each_arg_broken[1]} read as:\n{contents}")
 				input_file_list = contents.strip().split("\n")
-			break
 		else:
 			for each_file in each_arg_broken:
 				if not each_file=="":
@@ -154,18 +162,26 @@ def print_dict(input_dict):
 		input_dict[this_key].print_attributes()
 
 def is_tool(name):
-    """Check whether `name` is on PATH and marked as executable."""
+    """
+	Check whether `name` is on PATH and marked as executable.
+	"""
     # from whichcraft import which
     from shutil import which
     return which(name) is not None
 
 def generate_attribute_dict(input_file_list,util_list):
+	'''
+	Args: [input_file_list][util_list]
+		  [input_file_list] is the list of the input files or workloads to run on
+		  [util_list] is the list of utilities to run on [is a 2D list of strings]
+	Returns: [my_attribute_dict] is a dictionary of attributes. Key is the name of workload while attribute is a list of lists
+	'''
 	my_attribute_dict = dict()
 	for idx,util_list_internal in enumerate(util_list):
 		util_list_temp = list()
 
 		for util in util_list_internal:
-			if is_tool(util):
+			if is_tool(util.split(' ')[0]):
 				util_list_temp.append(util)
 			else:
 				if debug:
